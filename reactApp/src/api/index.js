@@ -1,20 +1,11 @@
-import axios from "axios";
+import { getEntityData } from "./sapApi";
 
-const baseURL = "ReactDest/";
+// Example: Fetch all NfaDetails
+const data = await getEntityData("NfaDetails");
 
-const instance = axios.create({
-  baseURL
+// Example: Fetch NfaVendorData with filter
+const filtered = await getEntityData("NfaVendorData", {
+  $filter: "vendorId eq 'V001'"
 });
 
-export const getTableData = async (params = { $top: 100, $skip: 0 }) => {
-  const { data } = await instance.get("/NfaDetails", {
-    params
-  });
-
-  return data.d?.results || data.d || data.value;
-};
-
-export const getTableCount = async () => {
-  const { data } = await instance.get("/NfaDetails/$count");
-  return data;
-};
+console.log(data);

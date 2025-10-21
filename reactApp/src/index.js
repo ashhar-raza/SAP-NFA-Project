@@ -3,10 +3,13 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+import { NfaProvider } from "context/NfaContext";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <NfaProvider>
+      <App />
+    </NfaProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );

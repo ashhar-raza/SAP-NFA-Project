@@ -1,0 +1,80 @@
+_schema-version: "3.2"
+ID: NfaDashboard
+version: 0.0.1
+modules:
+- name: NfaDashboard-destination-content
+  type: com.sap.application.content
+  requires:
+  - name: NfaDashboard-destination-service
+    parameters:
+      content-target: true
+  - name: NfaDashboard_html_repo_host
+    parameters:
+      service-key:
+        name: NfaDashboard_html_repo_host-key
+  - name: uaa_NfaDashboard
+    parameters:
+      service-key:
+        name: uaa_NfaDashboard-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: NfaProject_NfaDashboard_html_repo_host
+          ServiceInstanceName: NfaDashboard-html5-app-host-service
+          ServiceKeyName: NfaDashboard_html_repo_host-key
+          sap.cloud.service: NfaProject
+        - Authentication: OAuth2UserTokenExchange
+          Name: NfaProject_uaa_NfaDashboard
+          ServiceInstanceName: NfaDashboard-xsuaa-service
+          ServiceKeyName: uaa_NfaDashboard-key
+          sap.cloud.service: NfaProject
+        existing_destinations_policy: ignore
+  build-parameters:
+    no-source: true
+- name: NfaDashboard_ui_deployer
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: NfaDashboard_html_repo_host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - reactApp-content.zip
+      name: reactApp
+      target-path: resources/
+- name: reactApp
+  type: html5
+  path: reactApp
+  build-parameters:
+    builder: custom
+    commands:
+    - npm install
+    - npm run build
+    supported-platforms: []
+resources:
+- name: NfaDashboard-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      version: 1.0.0
+    service: destination
+    service-name: NfaDashboard-destination-service
+    service-plan: lite
+- name: NfaDashboard_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: NfaDashboard-html5-app-host-service
+    service-plan: app-host
+- name: uaa_NfaDashboard
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: NfaDashboard-xsuaa-service
+    service-plan: application

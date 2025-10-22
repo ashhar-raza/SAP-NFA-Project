@@ -1,5 +1,4 @@
 /mta_archives/
 /node_modules/
 /resources/
-/reactApp
-node_modules/
+/reactApp/node_modules/

@@ -10,6 +10,7 @@ export default function Layout() {
     // Remove stored token
     localStorage.removeItem("oauth_token");
     localStorage.removeItem("oauth_token_expiry");
+    localStorage.removeItem("email");
 
     // Navigate to login/dashboard page
     navigate("/");

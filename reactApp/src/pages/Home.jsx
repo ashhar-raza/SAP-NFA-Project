@@ -27,37 +27,37 @@ export default function Home() {
   };
 
   const filteredData = useMemo(() => {
-  return (nfaDetails || []).filter((item) => {
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch =
-      item.NfaNumber?.toLowerCase().includes(searchLower) ||
-      item.ProjectDescription?.toLowerCase().includes(searchLower) ||
-      item.Status?.toLowerCase().includes(searchLower) ||
-      item.RiskCategory?.toLowerCase().includes(searchLower);
+    return (nfaDetails || []).filter((item) => {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch =
+        item.NfaNumber?.toLowerCase().includes(searchLower) ||
+        item.ProjectDescription?.toLowerCase().includes(searchLower) ||
+        item.Status?.toLowerCase().includes(searchLower) ||
+        item.RiskCategory?.toLowerCase().includes(searchLower);
 
-    const matchesRisk = riskFilter ? item.RiskCategory === riskFilter : true;
+      const matchesRisk = riskFilter ? item.RiskCategory === riskFilter : true;
 
-    const matchesTotalSpend = totalSpendFilter
-      ? totalSpendFilter === "low"
-        ? Number(item.TotalSpend) < 20000
-        : totalSpendFilter === "medium"
-          ? Number(item.TotalSpend) >= 20000 && Number(item.TotalSpend) <= 50000
-          : Number(item.TotalSpend) > 50000
-      : true;
+      const matchesTotalSpend = totalSpendFilter
+        ? totalSpendFilter === "low"
+          ? Number(item.TotalSpend) < 20000
+          : totalSpendFilter === "medium"
+            ? Number(item.TotalSpend) >= 20000 && Number(item.TotalSpend) <= 50000
+            : Number(item.TotalSpend) > 50000
+        : true;
 
-    const matchesRfpDate = rfpDateFilter
-      ? new Date(item.RfpPublishDate).getFullYear().toString() === rfpDateFilter
-      : true;
+      const matchesRfpDate = rfpDateFilter
+        ? new Date(item.RfpPublishDate).getFullYear().toString() === rfpDateFilter
+        : true;
 
-    return matchesSearch && matchesRisk && matchesTotalSpend && matchesRfpDate;
-  });
-}, [searchTerm, riskFilter, totalSpendFilter, rfpDateFilter, nfaDetails]);
+      return matchesSearch && matchesRisk && matchesTotalSpend && matchesRfpDate;
+    });
+  }, [searchTerm, riskFilter, totalSpendFilter, rfpDateFilter, nfaDetails]);
 
 
   return (
     <div className="flex flex-col gap-6 px-10 mx-10">
       {/* Filters */}
-      <div className="flex flex-wrap gap-2 items-center">
+      {!loading && !error && (<div className="flex flex-wrap gap-2 items-center">
         <input
           type="text"
           placeholder="Search..."
@@ -85,16 +85,16 @@ export default function Home() {
             ))}
           </select>
         </div>
-      </div>
+      </div>)}
 
       {/* Table */}
       {loading ? (
         <Loading />
       ) : error ? (
-       <Error 
-    message={error.message} 
-    onRetry={() => fetchAllNfas()} // <-- retry fetch
-  />
+        <Error
+          message={error.message}
+          onRetry={() => fetchAllNfas()} // <-- retry fetch
+        />
       ) : (
         <div className="overflow-x-auto">
           <table className="table">

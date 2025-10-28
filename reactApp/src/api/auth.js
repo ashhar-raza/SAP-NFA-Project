@@ -36,6 +36,7 @@ export const fetchToken = async () => {
     localStorage.setItem("oauth_token", token);
     localStorage.setItem("oauth_token_expiry", expiryTime);
 
+    console.log(token);
     return token;
   } catch (error) {
     console.error("Failed to fetch OAuth token:", error.response?.data || error.message);

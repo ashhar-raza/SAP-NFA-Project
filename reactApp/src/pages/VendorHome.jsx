@@ -1,76 +1,79 @@
-// VendorHome.jsx
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useNfa } from "../context/NfaContext"; // Your NfaContext for API calls
+import { useNfa } from "../context/NfaContext";
 import Loading from "../components/Loading";
 
 export default function VendorHome() {
   const { nfaNumber } = useParams();
   const navigate = useNavigate();
-  const { nfaDetails, fetchNfaDetails, loading, error } = useNfa();
+  const {
+    nfaVendorData,
+    fetchAllByNfaNumber,
+    loading,
+    error,
+  } = useNfa();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [awardFilter, setAwardFilter] = useState("");
   const [roundFilter, setRoundFilter] = useState("");
 
-  // Fetch NFA details on mount
+  // Fetch vendor data for this NFA
   useEffect(() => {
-    fetchNfaDetails();
-  }, [fetchNfaDetails]);
+    if (nfaNumber) fetchAllByNfaNumber(nfaNumber);
+  }, [nfaNumber]);
 
-  // Get current NFA
-  const nfa = useMemo(
-    () => nfaDetails.find((item) => item.complaintno === nfaNumber),
-    [nfaDetails, nfaNumber]
-  );
-
-  // Get unique vendors filtered by latest round + search + filters
+  // Filter vendor data
   const vendors = useMemo(() => {
-    if (!nfa || !nfa.vendors) return [];
+    let result = nfaVendorData.filter(
+      (v) => v.NfaNumber === nfaNumber
+    );
 
-    const uniqueMap = {};
-    nfa.vendors.forEach((v) => {
-      if (!uniqueMap[v.vendorCode] || uniqueMap[v.vendorCode].round < v.round) {
-        uniqueMap[v.vendorCode] = v;
-      }
-    });
-
-    let result = Object.values(uniqueMap);
 
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
-      result = result.filter((v) => v.vendorName.toLowerCase().includes(lower));
+      result = result.filter((v) =>
+        v.VendorName?.toLowerCase().includes(lower)
+      );
     }
 
     if (awardFilter) {
       result = result.filter((v) =>
-        awardFilter === "awarded" ? v.awarded : !v.awarded
+        awardFilter === "awarded" ? v.AwardedVendor : !v.AwardedVendor
       );
     }
 
     if (roundFilter) {
-      result = result.filter((v) => v.round === Number(roundFilter));
+      result = result.filter((v) => String(v.RoundNo) === roundFilter);
     }
 
     return result;
-  }, [nfa, searchTerm, awardFilter, roundFilter]);
+  }, [nfaVendorData, searchTerm, awardFilter, roundFilter, nfaNumber]);
 
-  // Available rounds for filter dropdown
+  console.log(vendors);
+
+  // Extract unique rounds for dropdown
   const availableRounds = useMemo(() => {
-    if (!nfa || !nfa.vendors) return [];
-    return [...new Set(nfa.vendors.map((v) => v.round))];
-  }, [nfa]);
+    const rounds = nfaVendorData
+      .filter((v) => v.NfaNumber === nfaNumber)
+      .map((v) => v.RoundNo)
+      .filter(Boolean);
+    return [...new Set(rounds)];
+  }, [nfaVendorData, nfaNumber]);
 
-  // Handle loading and error states
-  if (loading) return <Loading message="Fetching vendors..." />;
+  // Handle states
+  if (loading) return <Loading message="Fetching vendor data..." />;
   if (error)
     return (
       <div className="p-10 text-center text-red-500">
         Error: {error.message}
       </div>
     );
-
-  if (!nfa) return <div className="p-10 text-center">NFA not found!</div>;
+  if (!vendors.length)
+    return (
+      <div className="p-10 text-center text-gray-500">
+        No vendors found for this NFA.
+      </div>
+    );
 
   return (
     <div className="flex flex-col gap-6 px-10 py-6 min-h-screen">
@@ -101,7 +104,7 @@ export default function VendorHome() {
             <option value="">All Rounds</option>
             {availableRounds.map((r) => (
               <option key={r} value={r}>
-                {r}
+                Round {r}
               </option>
             ))}
           </select>
@@ -115,47 +118,39 @@ export default function VendorHome() {
             <tr>
               <th className="px-4 py-2 text-left">Vendor Code</th>
               <th className="px-4 py-2 text-left">Vendor Name</th>
-              <th className="px-4 py-2 text-left">Latest Round</th>
+              <th className="px-4 py-2 text-left">Round</th>
               <th className="px-4 py-2 text-left">Final Quote</th>
               <th className="px-4 py-2 text-left">Awarded Vendor</th>
               <th className="px-4 py-2 text-left"></th>
             </tr>
           </thead>
           <tbody>
-            {vendors.length ? (
-              vendors.map((v) => (
-                <tr
-                  key={v.vendorCode}
-                  className="cursor-pointer hover:bg-gray-100"
-                  onClick={() =>
-                    navigate(`${window.location.pathname}/vendor/${v.vendorCode}`)
-                  }
-                >
-                  <td className="px-4 py-2">{v.vendorCode}</td>
-                  <td className="px-4 py-2">{v.vendorName}</td>
-                  <td className="px-4 py-2">{v.round}</td>
-                  <td className="px-4 py-2">{v.finalQuote}</td>
-                  <td className="px-4 py-2">{v.awarded ? "Yes" : "No"}</td>
-                  <td className="px-4 py-2">
-                    <button
-                      className="button-back"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`${window.location.pathname}/vendor/${v.vendorCode}`);
-                      }}
-                    >
-                      &gt;
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="text-center p-4 text-gray-500">
-                  No vendors found.
+            {vendors.map((v) => (
+              <tr
+                key={v.ProposedVendorCode}
+                className="cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() =>
+                  navigate(`${window.location.pathname}/vendor/${v.ProposedVendorCode}`)
+                }
+              >
+                <td className="px-4 py-2">{v.ProposedVendorCode}</td>
+                <td className="px-4 py-2">{v.VendorName}</td>
+                <td className="px-4 py-2">{v.round || "-"}</td>
+                <td className="px-4 py-2">{v.FinalQuote || "-"}</td>
+                <td className="px-4 py-2">{v.AwardedVendor || "-"}</td>
+                <td className="px-4 py-2">
+                  <button
+                    className="button-back"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`${window.location.pathname}/vendor/${v.ProposedVendorCode}`);
+                    }}
+                  >
+                    &gt;
+                  </button>
                 </td>
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
       </div>

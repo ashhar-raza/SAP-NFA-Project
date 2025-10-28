@@ -2,6 +2,7 @@
   "name": "project",
   "version": "0.1.0",
   "private": true,
+  "proxy": "https://b201b415trial-dev-nfaapplication-srv.cfapps.us10-001.hana.ondemand.com",
   "devDependencies": {
     "@sap/approuter": "14.4.2",
     "@sap/html5-repo-mock": "2.1.5"

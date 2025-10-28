@@ -10,6 +10,7 @@ import VendorHome from "./pages/VendorHome";
 import VendorObjectPage from "./pages/VendorObjectPage";
 import Login from "pages/Login";
 import Loading from "components/Loading";
+import { useEffect } from "react";
 
 
 function App() {
@@ -72,9 +73,13 @@ function App() {
             path="vendor/:nfaNumber/vendor/:vendorCode"
             element={<VendorObject role="vendor" />}
           /> */}
-          <Route
+          {/* <Route
             path="vendor/:nfaNumber/vendor/:vendorCode"
             element={<VendorObjectPage />}
+          /> */}
+          <Route
+            path="vendor/:nfaNumber/vendor/:vendorCode"
+            element={<VendorObject role="vendor" />}
           />
         </Route>
       </Routes>

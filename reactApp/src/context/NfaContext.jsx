@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState } from "react";
-import { getEntityData, postEntityData, deleteEntityData } from "../api/sapApi"; 
+import { getEntityData, postEntityData, deleteEntityData } from "../api/sapApi";
 
 const NfaContext = createContext();
 
 export const NfaProvider = ({ children }) => {
   const [nfaDetails, setNfaDetails] = useState([]);
+  const [oneNfa, setOneNfa] = useState(null); // 🆕 single NFA record
   const [nfaEventHistory, setNfaEventHistory] = useState([]);
   const [nfaVendorData, setNfaVendorData] = useState([]);
   const [nfaVendorItems, setNfaVendorItems] = useState([]);
@@ -23,7 +24,7 @@ export const NfaProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getEntityData("NfaDetails"); // replace with your entity name
+      const data = await getEntityData("NfaDetails");
       setNfaDetails(data || []);
     } catch (err) {
       console.error("Failed to fetch NFAs:", err);
@@ -34,13 +35,15 @@ export const NfaProvider = ({ children }) => {
   };
 
   // -------------------------
-  // 🔹 Fetch single NFA by number
+  // 🔹 Fetch all related data + one NFA header
   // -------------------------
   const fetchAllByNfaNumber = async (nfaNumber) => {
     setLoading(true);
     setError(null);
     try {
+      // 🧩 Fetch header and related entities together
       const [
+        nfaHeader,
         events,
         vendors,
         items,
@@ -48,8 +51,9 @@ export const NfaProvider = ({ children }) => {
         dueDeligenceGrade,
         attachments,
         comments,
-        workflow
+        workflow,
       ] = await Promise.all([
+        getEntityData("NfaDetails", { $filter: `NfaNumber eq '${nfaNumber}'` }),
         getEntityData("NfaEventHistory", { $filter: `NfaNumber eq '${nfaNumber}'` }),
         getEntityData("NfaVendorData", { $filter: `NfaNumber eq '${nfaNumber}'` }),
         getEntityData("NfaVendorItemsDetails", { $filter: `NfaNumber eq '${nfaNumber}'` }),
@@ -57,8 +61,11 @@ export const NfaProvider = ({ children }) => {
         getEntityData("NfaVendorDueDeligenceDetailsGrade", { $filter: `NfaNumber eq '${nfaNumber}'` }),
         getEntityData("NfaAttachments", { $filter: `NfaNumber eq '${nfaNumber}'` }),
         getEntityData("NfaCommentsHistory", { $filter: `NfaNumber eq '${nfaNumber}'` }),
-        getEntityData("NfaWorkflowHistory", { $filter: `NfaNumber eq '${nfaNumber}'` })
+        getEntityData("NfaWorkflowHistory", { $filter: `NfaNumber eq '${nfaNumber}'` }),
       ]);
+
+      // 🆕 Store oneNfa (first record only)
+      setOneNfa(nfaHeader?.[0] || null);
 
       setNfaEventHistory(events);
       setNfaVendorData(vendors);
@@ -129,8 +136,12 @@ export const NfaProvider = ({ children }) => {
     }
   };
 
+  // -------------------------
+  // ✅ Context Value
+  // -------------------------
   const value = {
     nfaDetails,
+    oneNfa, // 🆕 single NFA record
     nfaEventHistory,
     nfaVendorData,
     nfaVendorItems,
@@ -141,8 +152,8 @@ export const NfaProvider = ({ children }) => {
     nfaWorkflowHistory,
     loading,
     error,
-    fetchAllNfas,          // <-- for Home list
-    fetchAllByNfaNumber,   // <-- for single NFA
+    fetchAllNfas,
+    fetchAllByNfaNumber,
     createAttachment,
     deleteAttachment,
     createComment,
